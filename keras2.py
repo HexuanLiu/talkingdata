@@ -124,8 +124,12 @@ print('Labels data: train shape {}, test shape {}'.format(Xtr_label.shape, Xte_l
 # In[7]:
 
 # time
-time=pd.read_csv('Desktop/talkingdata/time.csv')
-ntime = 55
+events['time']=events['timestamp'].map(lambda x: pd.to_datetime(x).dayofweek*24+pd.to_datetime(x).hour)
+timeencoder = LabelEncoder().fit(events.time)
+events['time'] = timeencoder.transform(events.time)
+ntime = len(timeencoder.classes_)
+time = events[['device_id','time']].groupby(['device_id','time'])['time'].agg(['size']).merge(gatrain[['trainrow']], how='left', left_index=True, right_index=True).merge(gatest[['testrow']], how='left', left_index=True, right_index=True).reset_index()
+time.head()
 
 d = time.dropna(subset=['trainrow'])
 Xtr_time = csr_matrix((np.ones(d.shape[0]), (d.trainrow, d.time)), 
